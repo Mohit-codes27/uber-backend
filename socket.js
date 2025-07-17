@@ -14,7 +14,7 @@ const socketUsers = new Map();
 function initializeSocket(server) {
     io = new Server(server, {
         cors: {
-            origin: "https://uber-frontend-chi.vercel.app/", // ✅ allow all origins
+            origin: "https://uber-frontend-chi.vercel.app", // ✅ allow all origins
             methods: ["GET", "POST"],
             credentials: true, // ❌ must be false if origin is "*"
         },
