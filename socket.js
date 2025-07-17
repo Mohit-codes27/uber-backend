@@ -16,7 +16,7 @@ function initializeSocket(server) {
         cors: {
             origin: "https://uber-frontend-chi.vercel.app/", // ✅ allow all origins
             methods: ["GET", "POST"],
-            credentials: false, // ❌ must be false if origin is "*"
+            credentials: true, // ❌ must be false if origin is "*"
         },
 
     });
