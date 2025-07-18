@@ -14,12 +14,13 @@ const socketUsers = new Map();
 function initializeSocket(server) {
     io = new Server(server, {
         cors: {
-            origin: "https://uber-frontend-chi.vercel.app", // ✅ allow all origins
+            origin: "https://uber-frontend-chi.vercel.app",
             methods: ["GET", "POST"],
-            credentials: true, // ❌ must be false if origin is "*"
+            credentials: true,
         },
-
+        transports: ["websocket"] // ✅ force WebSocket transport
     });
+
 
     io.on("connection", (socket) => {
         console.log(`✅ New client connected: ${socket.id}`);
