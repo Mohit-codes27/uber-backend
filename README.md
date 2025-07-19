@@ -1,823 +1,181 @@
-# User Registration API
+# Uber Backend API Documentation
 
-## Endpoint
-
-`POST /users/register`
-
-## Description
-
-Registers a new user in the system. Requires a valid email, a password with at least 6 characters, and a first name with at least 3 characters.
-
-## Request Body
-
-Send a JSON object in the following format:
-
-```json
-{
-  "fullName": {
-    "firstName": "John",
-    "lastName": "Doe"
-  },
-  "email": "john.doe@example.com",
-  "password": "yourpassword"
-}
-```
-
-- `fullName.firstName` (string, required, min 3 chars)
-- `fullName.lastName` (string, optional)
-- `email` (string, required, valid email)
-- `password` (string, required, min 6 chars)
-
-## Responses
-
-- **201 Created**
-  - User registered successfully.
-  - Response body:
-    ```json
-    {
-      "token": "<jwt_token>",
-      "user": {
-        "_id": "<user_id>",
-        "fullName": {
-          "firstName": "John",
-          "lastName": "Doe"
-        },
-        "email": "john.doe@example.com"
-      }
-    }
-    ```
-
-- **400 Bad Request**
-  - Validation failed or missing required fields.
-  - Response body:
-    ```json
-    {
-      "errors": [
-        {
-          "msg": "Error message",
-          "param": "field",
-          "location": "body"
-        }
-      ]
-    }
-    ```
-
-## Example
-
-```bash
-curl -X POST http://localhost:4000/users/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fullName": { "firstName": "John", "lastName": "Doe" },
-    "email": "john.doe@example.com",
-    "password": "yourpassword"
-  }'
-```
-
-## Login API
-
-### Endpoint
-
-`POST /users/login`
-
-### Description
-
-Authenticates a user with email and password. Returns a JWT token and user information if credentials are valid.
-
-### Request Body
-
-Send a JSON object in the following format:
-
-```json
-{
-  "email": "john.doe@example.com",
-  "password": "yourpassword"
-}
-```
-
-- `email` (string, required, valid email)
-- `password` (string, required, min 6 chars)
-
-### Responses
-
-- **200 OK**
-  - Login successful.
-  - Response body:
-    ```json
-    {
-      "token": "<jwt_token>",
-      "user": {
-        "_id": "<user_id>",
-        "fullName": {
-          "firstName": "John",
-          "lastName": "Doe"
-        },
-        "email": "john.doe@example.com"
-      }
-    }
-    ```
-
-- **400 Bad Request**
-  - Validation failed or missing required fields.
-  - Response body:
-    ```json
-    {
-      "errors": [
-        {
-          "msg": "Error message",
-          "param": "field",
-          "location": "body"
-        }
-      ]
-    }
-    ```
-
-- **401 Unauthorized**
-  - Invalid email or password.
-  - Response body:
-    ```json
-    {
-      "message": "Invalid email or password"
-    }
-    ```
-
-### Example
-
-```bash
-curl -X POST http://localhost:4000/users/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john.doe@example.com",
-    "password": "yourpassword"
-  }'
-```
-
-## Get User Profile
-
-### Endpoint
-
-`GET /users/profile`
-
-### Description
-
-Returns the authenticated user's profile information. Requires a valid JWT token in the `Authorization` header or as a cookie.
-
-### Headers
-
-- `Authorization: Bearer <jwt_token>` (or cookie named `token`)
-
-### Responses
-
-- **200 OK**
-  - Returns the user profile.
-    ```json
-    {
-      "user": {
-        "_id": "<user_id>",
-        "fullName": {
-          "firstName": "John",
-          "lastName": "Doe"
-        },
-        "email": "john.doe@example.com"
-      }
-    }
-    ```
-
-- **401 Unauthorized**
-  - Missing or invalid token.
-    ```json
-    {
-      "message": "Unauthorized"
-    }
-    ```
-
-### Example
-
-```bash
-curl -X GET http://localhost:4000/users/profile \
-  -H "Authorization: Bearer <jwt_token>"
-```
+This backend powers an Uber-like ride-hailing app. It provides RESTful APIs for user and captain registration, authentication, ride management, and location-based services using Google Maps APIs.
 
 ---
 
-## Logout User
+## Getting Started
 
-### Endpoint
+### Prerequisites
 
-`GET /users/logout`
+- Node.js (v16+ recommended)
+- MongoDB (local or Atlas)
+- Google Maps API Key (for geocoding, distance, and autocomplete)
+- Git
 
-### Description
+### Installation
 
-Logs out the authenticated user by blacklisting the current JWT token and clearing the authentication cookie.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/uber-backend.git
+   cd uber-backend
+   ```
 
-### Headers
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-- `Authorization: Bearer <jwt_token>` (or cookie named `token`)
+3. **Configure environment variables:**
+   - Create a `.env` file in the root directory.
+   - Add the following:
+     ```
+     PORT=4000
+     MONGODB_URI=mongodb://localhost:27017/uber
+     GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+     JWT_SECRET=your_jwt_secret
+     ```
 
-### Responses
-
-- **200 OK**
-  - Logout successful.
-    ```json
-    {
-      "message": "Logged out successfully"
-    }
-    ```
-
-- **401 Unauthorized**
-  - Missing or invalid token.
-    ```json
-    {
-      "message": "Unauthorized"
-    }
-    ```
-
-### Example
-
-```bash
-curl -X GET http://localhost:4000/users/logout \
-  -H "Authorization: Bearer <jwt_token>"
-```
-
-# Captain API Documentation
-
-## Register Captain
-
-### Endpoint
-
-`POST /captains/register`
-
-### Description
-
-Registers a new captain (driver) with vehicle information. Requires a valid email, password, first name, and vehicle details.
-
-### Request Body
-
-Send a JSON object in the following format:
-
-```json
-{
-  "fullName": {
-    "firstName": "Jane",
-    "lastName": "Smith"
-  },
-  "email": "jane.smith@example.com",
-  "password": "yourpassword",
-  "vehicle": {
-    "color": "Red",
-    "plate": "ABC123",
-    "capacity": 4,
-    "vehicleType": "car"
-  }
-}
-```
-
-- `fullName.firstName` (string, required, min 3 chars)
-- `fullName.lastName` (string, optional)
-- `email` (string, required, valid email)
-- `password` (string, required, min 6 chars)
-- `vehicle.color` (string, required, min 3 chars)
-- `vehicle.plate` (string, required, min 3 chars, unique)
-- `vehicle.capacity` (integer, required, min 1)
-- `vehicle.vehicleType` (string, required, one of: `car`, `motorcycle`, `auto`)
-
-### Responses
-
-- **201 Created**
-  - Captain registered successfully.
-  - Response body:
-    ```json
-    {
-      "token": "<jwt_token>",
-      "captain": {
-        "_id": "<captain_id>",
-        "fullName": {
-          "firstName": "Jane",
-          "lastName": "Smith"
-        },
-        "email": "jane.smith@example.com",
-        "vehicle": {
-          "color": "Red",
-          "plate": "ABC123",
-          "capacity": 4,
-          "vehicleType": "car"
-        }
-      }
-    }
-    ```
-
-- **400 Bad Request**
-  - Validation failed, missing required fields, or captain already exists.
-    ```json
-    {
-      "errors": [
-        {
-          "msg": "Error message",
-          "param": "field",
-          "location": "body"
-        }
-      ]
-    }
-    ```
-    or
-    ```json
-    {
-      "message": "Captain already exists"
-    }
-    ```
-
-### Example
-
-```bash
-curl -X POST http://localhost:4000/captains/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fullName": { "firstName": "Jane", "lastName": "Smith" },
-    "email": "jane.smith@example.com",
-    "password": "yourpassword",
-    "vehicle": {
-      "color": "Red",
-      "plate": "ABC123",
-      "capacity": 4,
-      "vehicleType": "car"
-    }
-  }'
-```
-
-## Captain Login
-
-### Endpoint
-
-`POST /captains/login`
-
-### Description
-
-Authenticates a captain with email and password. Returns a JWT token and captain information if credentials are valid.
-
-### Request Body
-
-```json
-{
-  "email": "jane.smith@example.com",
-  "password": "yourpassword"
-}
-```
-
-- `email` (string, required, valid email)
-- `password` (string, required, min 6 chars)
-
-### Responses
-
-- **200 OK**
-  - Login successful.
-    ```json
-    {
-      "token": "<jwt_token>",
-      "captain": {
-        "_id": "<captain_id>",
-        "fullName": {
-          "firstName": "Jane",
-          "lastName": "Smith"
-        },
-        "email": "jane.smith@example.com",
-        "vehicle": {
-          "color": "Red",
-          "plate": "ABC123",
-          "capacity": 4,
-          "vehicleType": "car"
-        }
-      }
-    }
-    ```
-
-- **400 Bad Request**
-  - Validation failed or missing required fields.
-    ```json
-    {
-      "errors": [
-        {
-          "msg": "Error message",
-          "param": "field",
-          "location": "body"
-        }
-      ]
-    }
-    ```
-
-- **401 Unauthorized**
-  - Invalid email or password.
-    ```json
-    {
-      "message": "Invalid email or password"
-    }
-    ```
-
-### Example
-
-```bash
-curl -X POST http://localhost:4000/captains/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "jane.smith@example.com",
-    "password": "yourpassword"
-  }'
-```
+4. **Start the server:**
+   ```bash
+   npm start
+   ```
+   The server will run on `http://localhost:4000` by default.
 
 ---
 
-## Get Captain Profile
+## Testing the API
 
-### Endpoint
+You can test the API using [Postman](https://www.postman.com/) or `curl` commands provided in this documentation.
 
-`GET /captains/profile`
-
-### Description
-
-Returns the authenticated captain's profile information. Requires a valid JWT token in the `Authorization` header or as a cookie.
-
-### Headers
-
-- `Authorization: Bearer <jwt_token>` (or cookie named `token`)
-
-### Responses
-
-- **200 OK**
-  - Returns the captain profile.
-    ```json
-    {
-      "captain": {
-        "_id": "<captain_id>",
-        "fullName": {
-          "firstName": "Jane",
-          "lastName": "Smith"
-        },
-        "email": "jane.smith@example.com",
-        "vehicle": {
-          "color": "Red",
-          "plate": "ABC123",
-          "capacity": 4,
-          "vehicleType": "car"
-        }
-      }
-    }
-    ```
-
-- **401 Unauthorized**
-  - Missing or invalid token.
-    ```json
-    {
-      "message": "Unauthorized"
-    }
-    ```
-
-### Example
-
-```bash
-curl -X GET http://localhost:4000/captains/profile \
-  -H "Authorization: Bearer <jwt_token>"
-```
+- All endpoints requiring authentication expect a JWT token in the `Authorization` header:  
+  `Authorization: Bearer <jwt_token>`
 
 ---
 
-## Captain Logout
+## API Endpoints Overview
 
-### Endpoint
+### Users
 
-`POST /captains/logout`
+- **Register:** `POST /users/register`  
+  Register a new user with name, email, and password.
 
-### Description
+- **Login:** `POST /users/login`  
+  Authenticate user and receive JWT token.
 
-Logs out the authenticated captain by blacklisting the current JWT token and clearing the authentication cookie.
+- **Profile:** `GET /users/profile`  
+  Get authenticated user's profile.
 
-### Headers
+- **Logout:** `GET /users/logout`  
+  Logout user and blacklist JWT.
 
-- `Authorization: Bearer <jwt_token>` (or cookie named `token`)
+### Captains
 
-### Responses
+- **Register:** `POST /captains/register`  
+  Register a new captain with vehicle details.
 
-- **200 OK**
-  - Logout successful.
-    ```json
-    {
-      "message": "Logged out successfully"
-    }
-    ```
+- **Login:** `POST /captains/login`  
+  Authenticate captain and receive JWT token.
 
-- **401 Unauthorized**
-  - Missing or invalid token.
-    ```json
-    {
-      "message": "Unauthorized"
-    }
-    ```
+- **Profile:** `GET /captains/profile`  
+  Get authenticated captain's profile.
 
-### Example
+- **Logout:** `POST /captains/logout`  
+  Logout captain and blacklist JWT.
 
-```bash
-curl -X POST http://localhost:4000/captains/logout \
-  -H "Authorization: Bearer <jwt_token>"
-```
+### Rides
 
-# Backend API Reference
+- **Create Ride:** `POST /rides/create`  
+  User requests a ride, fare is calculated.
 
-This document describes the main endpoints, request/response formats, and related models/controllers for the ride and maps features.
+- **Confirm Ride:** `POST /rides/confirm`  
+  Captain accepts a ride.
 
----
+- **Get Fare:** `GET /rides/get-fare`  
+  Get fare estimate for a route.
 
-## Ride Endpoints
+- **Start Ride:** `GET /rides/start-ride`  
+  Captain starts ride with OTP.
 
-### Create Ride
+- **End Ride:** `POST /rides/end-ride`  
+  Captain ends the ride.
 
-**Endpoint:**  
-`POST /rides/create`
+### Maps
 
-**Description:**  
-Creates a new ride request. Calculates fare and OTP using Google Maps APIs.
+- **Get Coordinates:** `GET /maps/get-coordinates`  
+  Get latitude/longitude for an address.
 
-**Headers:**  
-- `Authorization: Bearer <jwt_token>`
+- **Get Distance & Time:** `GET /maps/get-distance-time`  
+  Get distance and time between two addresses.
 
-**Request Body:**
-```json
-{
-  "pickup": "123 Main St, City",
-  "destination": "456 Elm St, City",
-  "vehicleType": "car"
-}
-```
-- `pickup` (string, required): Pickup address.
-- `destination` (string, required): Destination address.
-- `vehicleType` (string, required): One of `auto`, `car`, `bike`.
-
-**Success Response:**
-- **201 Created**
-```json
-{
-  "ride": {
-    "_id": "<ride_id>",
-    "userId": "<user_id>",
-    "pickup": "123 Main St, City",
-    "destination": "456 Elm St, City",
-    "vehicleType": "car",
-    "fare": 120,
-    "otp": "1234",
-    "status": "pending",
-    "distance": 5400,
-    "duration": 900
-  }
-}
-```
-
-**Error Responses:**
-- **400 Bad Request**
-```json
-{
-  "errors": [
-    {
-      "msg": "Invalid pickup location",
-      "param": "pickup",
-      "location": "body"
-    }
-  ]
-}
-```
-- **401 Unauthorized**
-```json
-{
-  "message": "Unauthorized"
-}
-```
+- **Get Suggestions:** `GET /maps/get-suggestions`  
+  Get address autocomplete suggestions.
 
 ---
 
-## Get Fare Estimate
+## Endpoint Details & Descriptions
 
-**Endpoint:**  
-`GET /rides/get-fare`
+### User Endpoints
 
-**Description:**  
-Returns fare estimates for `auto`, `car`, and `bike` based on the distance and time calculated using Google Maps APIs.
+#### Register User
+Registers a new user. Requires first name, email, and password.
 
-**Headers:**  
-- `Authorization: Bearer <jwt_token>`
+#### Login User
+Authenticates a user and returns a JWT token.
 
-**Query Parameters:**
-- `pickup` (string, required): Pickup address.  
-- `destination` (string, required): Destination address.
+#### Get User Profile
+Returns the profile of the authenticated user.
 
-**Success Response:**
-- **200 OK**
-```json
-{
-  "auto": 72.5,
-  "car": 120,
-  "bike": 58.3
-}
-
-```
-
-**Error Responses:**
-- **400 Bad Request**
-```json
-{
-  "errors": [
-    {
-      "msg": "Invalid pickup location",
-      "param": "pickup",
-      "location": "query"
-    },
-    {
-      "msg": "Invalid destination location",
-      "param": "destination",
-      "location": "query"
-    }
-  ]
-}
-
-```
-- **500 Unauthorized**
-```json
-{
-  "error": "Pickup and destination are required to calculate fare"
-}
-```
+#### Logout User
+Logs out the user and invalidates the JWT token.
 
 ---
 
-## Maps Endpoints
+### Captain Endpoints
 
-### Get Coordinates
+#### Register Captain
+Registers a new captain (driver) with vehicle details.
 
-**Endpoint:**  
-`GET /maps/get-coordinates?address=123 Main St, City`
+#### Captain Login
+Authenticates a captain and returns a JWT token.
 
-**Description:**  
-Returns the latitude and longitude for a given address.
+#### Get Captain Profile
+Returns the profile of the authenticated captain.
 
-**Headers:**  
-- `Authorization: Bearer <jwt_token>`
-
-**Success Response:**
-- **200 OK**
-```json
-{
-  "ltd": 28.6139,
-  "lang": 77.2090
-}
-```
-
-**Error Responses:**
-- **400 Bad Request**
-```json
-{
-  "errors": [
-    {
-      "msg": "Invalid value",
-      "param": "address",
-      "location": "query"
-    }
-  ]
-}
-```
-- **500 Internal Server Error**
-```json
-{
-  "error": "Unable to find coordinates for the given address"
-}
-```
+#### Captain Logout
+Logs out the captain and invalidates the JWT token.
 
 ---
 
-### Get Distance and Time
+### Ride Endpoints
 
-**Endpoint:**  
-`GET /maps/get-distance-time?origin=123 Main St, City&destination=456 Elm St, City`
+#### Create Ride
+User requests a ride. Fare and OTP are generated using Google Maps APIs.
 
-**Description:**  
-Returns the distance and estimated travel time between two addresses.
+#### Confirm Ride
+Captain accepts a ride request.
 
-**Headers:**  
-- `Authorization: Bearer <jwt_token>`
+#### Get Fare Estimate
+Returns fare estimates for auto, car, and bike based on route.
 
-**Success Response:**
-- **200 OK**
-```json
-{
-  "distance": {
-    "text": "5.4 km",
-    "value": 5400
-  },
-  "duration": {
-    "text": "15 mins",
-    "value": 900
-  }
-}
-```
+#### Start Ride
+Captain starts the ride using OTP.
 
-**Error Responses:**
-- **400 Bad Request**
-```json
-{
-  "errors": [
-    {
-      "msg": "Invalid value",
-      "param": "origin",
-      "location": "query"
-    }
-  ]
-}
-```
-- **500 Internal Server Error**
-```json
-{
-  "error": "No route found between the origin and destination"
-}
-```
+#### End Ride
+Captain ends the ride and fare is finalized.
 
 ---
 
-### Get Address Suggestions
+### Maps Endpoints
 
-**Endpoint:**  
-`GET /maps/get-suggestions?input=Main`
+#### Get Coordinates
+Returns latitude and longitude for a given address.
 
-**Description:**  
+#### Get Distance and Time
+Returns distance and estimated travel time between two addresses.
+
+#### Get Address Suggestions
 Returns autocomplete suggestions for addresses.
-
-**Headers:**  
-- `Authorization: Bearer <jwt_token>`
-
-**Success Response:**
-- **200 OK**
-```json
-{
-  "suggestions": [
-    {
-      "description": "123 Main St, City, Country",
-      "place_id": "abcdef123456"
-    },
-    {
-      "description": "124 Main St, City, Country",
-      "place_id": "abcdef654321"
-    }
-  ]
-}
-```
-
-**Error Responses:**
-- **400 Bad Request**
-```json
-{
-  "error": "Input is required"
-}
-```
-- **500 Internal Server Error**
-```json
-{
-  "error": "No suggestions found for the given address"
-}
-```
-
----
-
-## Models
-
-### Ride Model (`ride.model.js`)
-- `userId`: ObjectId (User)
-- `captain`: ObjectId (Captain)
-- `pickup`: String
-- `destination`: String
-- `vehicleType`: String
-- `fare`: Number
-- `otp`: String
-- `status`: String (pending, accepted, in-progress, completed, cancelled)
-- `distance`: Number (meters)
-- `duration`: Number (seconds)
-
----
-
-## Controllers
-
-### `ride.controller.js`
-- **createRide**: Handles ride creation, calls `rideService.createRide`, returns ride or error.
-
-### `map.controller.js`
-- **getCoordinates**: Returns coordinates for an address.
-- **getDistanceAndTime**: Returns distance and duration between two addresses.
-- **getSuggestions**: Returns address suggestions.
-
----
-
-## Services
-
-### `ride.service.js`
-- **createRide**: Validates input, calculates fare and OTP, creates ride.
-- **getFare**: Uses Google Maps API to calculate fare based on distance/time.
-
-### `maps.service.js`
-- **getAddressCoordinate**: Calls Google Geocoding API.
-- **getDistanceAndTime**: Calls Google Distance Matrix API.
-- **getSuggestions**: Calls Google Places Autocomplete API.
 
 ---
 
